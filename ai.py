@@ -2,14 +2,14 @@ import os
 from gtts import gTTS
 import pygame
 import speech_recognition as sr
-import openai
+from openai import OpenAI
 from dotenv import load_dotenv
 
 # .env 파일에 저장된 API 키를 불러오기 위해 dotenv 로드
 load_dotenv()
 
-# OpenAI API 키 설정
-openai.api_key = os.getenv("OPENAI_API_KEY")  # .env 파일에서 API 키를 가져옴
+# OpenAI 클라이언트 초기화
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 # 음성 인식 함수
 def recognize_speech():
@@ -30,10 +30,10 @@ def recognize_speech():
         print("API 요청 오류가 발생했습니다.")
         return None
 
-# GPT-4 응답 생성 함수
+# GPT 응답 생성 함수
 def generate_response(prompt):
-    response = openai.ChatCompletion.create(
-        model="gpt-4",  # GPT-4 모델을 사용
+    response = client.chat.completions.create(
+        model="GPT-3.5-turbo",  # GPT 모델을 사용
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
@@ -41,7 +41,7 @@ def generate_response(prompt):
         max_tokens=100,  # 응답 길이 설정
         temperature=0.7
     )
-    return response.choices[0].message['content'].strip()  # 수정된 부분
+    return response.choices[0].message.content.strip()
 
 # 음성 출력 함수
 def speak_text(text):
