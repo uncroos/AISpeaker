@@ -41,7 +41,7 @@ def generate_response(prompt):
         max_tokens=100,  # 응답 길이 설정
         temperature=0.7
     )
-    return response['choices'][0]['message']['content'].strip()
+    return response.choices[0].message['content'].strip()  # 수정된 부분
 
 # 음성 출력 함수
 def speak_text(text):
