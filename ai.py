@@ -33,7 +33,7 @@ def recognize_speech():
 # GPT 응답 생성 함수
 def generate_response(prompt):
     response = client.chat.completions.create(
-        model="GPT-3.5-turbo",  # GPT 모델을 사용
+        model="gpt-3.5-turbo",  # GPT-3.5-turbo 모델을 사용
         messages=[
             {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt}
