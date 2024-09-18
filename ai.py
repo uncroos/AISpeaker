@@ -2,14 +2,14 @@ import os
 from gtts import gTTS
 import pygame
 import speech_recognition as sr
-from google.cloud import aiplatform
+import openai
 from dotenv import load_dotenv
 
 # .env 파일에 저장된 API 키를 불러오기 위해 dotenv 로드
 load_dotenv()
 
-# Google Cloud 프로젝트 ID 설정
-os.environ["GOOGLE_CLOUD_PROJECT"] = os.getenv("GOOGLE_CLOUD_PROJECT_ID")
+# OpenAI API 키 설정
+openai.api_key = os.getenv("OPENAI_API_KEY")  # .env 파일에서 API 키를 가져옴
 
 # 음성 인식 함수
 def recognize_speech():
@@ -30,30 +30,25 @@ def recognize_speech():
         print("API 요청 오류가 발생했습니다.")
         return None
 
-# Gemini 응답 생성 함수
+# GPT-4 응답 생성 함수
 def generate_response(prompt):
-    # Gemini API 엔드포인트 및 매개변수 설정
-    endpoint = f"https://us-central1-aiplatform.googleapis.com/v1/projects/{os.getenv('GOOGLE_CLOUD_PROJECT_ID')}/locations/us-central1/publishers/google/models/text-bison-001:predict"
-    headers = {"Content-Type": "application/json"}
-    data = {
-        "instances": [{"prompt": prompt}],
-        "parameters": {"temperature": 0.7, "max_output_tokens": 100}
-    }
-
-    # API 호출 및 응답 처리
-    response = aiplatform.gapic.PredictionServiceClient().predict(
-        endpoint=endpoint,
-        instances=data["instances"],
-        parameters=data["parameters"],
-        headers=headers,
+    response = openai.ChatCompletion.create(
+        model="gpt-4",  # GPT-4 모델을 사용
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": prompt}
+        ],
+        max_tokens=100,  # 응답 길이 설정
+        temperature=0.7
     )
-    return response.predictions[0]["content"]
+    return response['choices'][0]['message']['content'].strip()
 
 # 음성 출력 함수
 def speak_text(text):
     tts = gTTS(text=text, lang='ko')  # 한국어 음성 합성
     tts.save("response.mp3")
     
+    # pygame을 사용해 음성 재생
     try:
         pygame.mixer.init()
         pygame.mixer.music.load("response.mp3")
@@ -77,10 +72,10 @@ def get_valid_speech():
 # 전체 실행 함수
 def main():
     while True:
-        # 음성 인식 후 Gemini 응답 받기
+        # 음성 인식 후 GPT-4 응답 받기
         recognized_text = get_valid_speech()
         response = generate_response(recognized_text)
-        print(f"Gemini의 응답: {response}")
+        print(f"GPT-4의 응답: {response}")
         
         # 응답을 음성으로 출력
         speak_text(response)
